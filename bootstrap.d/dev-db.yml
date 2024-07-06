@@ -36,3 +36,45 @@ packages:
       - args: ['make', 'install']
         environ:
           DESTDIR: '@THIS_COLLECT_DIR@'
+          
+  - name: postgresql
+    architecture: '@OPTION:arch@'
+    source:
+      subdir: 'ports'
+      url: 'https://ftp.postgresql.org/pub/source/v16.3/postgresql-16.3.tar.gz'
+      format: 'tar.gz'
+      checksum: blake2b:8df1890f71134400a503610bbd054ee4d92384f0761a012d4ee250072b49ea22bdfb50870a3e2ca3f7bfed4eb57903292ee40d8e13f75059c11fad9fd94d083b
+      extract_path: 'postgresql-16.3'
+      version: '16.3'
+    tools_required:
+      - system-gcc
+      - host-pkg-config
+      - host-autoconf-v2.69
+      - host-automake-v1.15
+      - host-libtool
+      - host-tzdb
+      - virtual: pkgconfig-for-target
+        triple: "@OPTION:arch-triple@"
+      - virtual: pkgconfig-for-host
+        program_name: host-pkg-config
+    pkgs_required:
+      - mlibc
+    configure:
+      - args: |
+            cat << EOF > @THIS_SOURCE_DIR@/src/include/port/managarm.h
+            #define PLATFORM_DEFAULT_SYNC_METHOD SYNC_METHOD_FDATASYNC
+            EOF
+      - args: ['cp', '@THIS_SOURCE_DIR@/src/makefiles/Makefile.linux', '@THIS_SOURCE_DIR@/src/makefiles/Makefile.managarm']
+      - args:
+        - '@THIS_SOURCE_DIR@/configure'
+        - '--host=@OPTION:arch-triple@'
+        - '--prefix=/usr'
+        - '--with-system-tzdata=@SYSROOT_DIR@/host-tzdata'
+        - '--with-template=netbsd'
+    build:
+      - args: ['make', 'world-bin', '-j@PARALLELISM@']
+      - args: ['make', 'install-world-bin']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+        
+
