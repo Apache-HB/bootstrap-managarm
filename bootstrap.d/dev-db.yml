@@ -60,23 +60,20 @@ packages:
     pkgs_required:
       - mlibc
     configure:
-      - args: 
-        - 'sed' 
-        - '-i'
-        - "s:host_system == 'linux':host_system == 'managarm':g"
-        - '@THIS_SOURCE_DIR@/meson.build'
       - args: |
             cat << EOF > @THIS_SOURCE_DIR@/src/include/port/managarm.h
-
-            #define PLATFORM_DEFAULT_SYNC_METHOD	SYNC_METHOD_FDATASYNC
+            #define PLATFORM_DEFAULT_SYNC_METHOD SYNC_METHOD_FDATASYNC
             EOF
       - args: ['cp', '@THIS_SOURCE_DIR@/src/makefiles/Makefile.linux', '@THIS_SOURCE_DIR@/src/makefiles/Makefile.managarm']
       - args:
         - '@THIS_SOURCE_DIR@/configure'
         - '--host=@OPTION:arch-triple@'
-        - '--prefix=@THIS_COLLECT_DIR@'
+        - '--prefix=/usr'
         - '--with-template=netbsd'
     build:
       - args: ['make', 'world-bin', '-j@PARALLELISM@']
-      - args: ['make', 'install']
+      - args: ['make', 'install-world-bin']
+        environ:
+          DESTDIR: '@THIS_COLLECT_DIR@'
+        
 
